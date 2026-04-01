@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Օրվա պլան</title>
+
+<style>
+body {
+margin: 0;
+background: url("bg.jpg") no-repeat center center fixed;
+background-size: cover;
+font-family: Arial;
+color: white;
+display: flex;
+justify-content: center;
+}
+
+.container {
+width: 360px;
+padding: 20px;
+}
+
+.card {
+background: #111827;
+border-radius: 20px;
+padding: 20px;
+box-shadow: 0 0 25px rgba(0,255,163,0.15);
+margin-bottom: 20px;
+}
+
+.title {
+text-align: center;
+font-size: 22px;
+margin-bottom: 15px;
+}
+
+.highlight {
+color: #00ffa3;
+font-size: 24px;
+text-align: center;
+margin-top: 10px;
+}
+
+.progress {
+text-align: center;
+margin-top: 10px;
+color: #00ffa3;
+}
+
+.days {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+}
+
+.day {
+background: #0f172a;
+border-radius: 15px;
+padding: 12px;
+text-align: center;
+cursor: pointer;
+transition: 0.2s;
+}
+
+.day:hover {
+transform: scale(1.05);
+}
+
+.completed {
+border: 2px solid #00ffa3;
+box-shadow: 0 0 20px rgba(0,255,163,0.8);
+color: #00ffa3;
+}
+
+input {
+width: 100%;
+padding: 10px;
+margin-bottom: 10px;
+border-radius: 10px;
+border: none;
+}
+
+button {
+width: 100%;
+padding: 10px;
+border-radius: 10px;
+border: none;
+background: #00ffa3;
+font-weight: bold;
+cursor: pointer;
+margin-top: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+<div class="title">Օրվա պլան 30 օր</div>
+
+<input type="number" id="start" placeholder="սկիզբ ($100)">
+<input type="number" id="percent" placeholder="օրվա տոկոս (5%)">
+
+<button onclick="generate()">Հաշվել</button>
+<button onclick="resetPlan()">Վերականգնել Պլանը</button>
+
+<div class="highlight" id="result"></div>
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="days" id="days"></div>
+
+</div>
+
+<script>
+let completedDays = JSON.parse(localStorage.getItem("days")) || [];
+
+function generate() {
+let start = parseFloat(document.getElementById("start").value);
+let percent = parseFloat(document.getElementById("percent").value) / 100;
+
+localStorage.setItem("start", start);
+localStorage.setItem("percent", percent);
+
+let daysContainer = document.getElementById("days");
+daysContainer.innerHTML = "";
+
+let balance = start;
+
+for (let i = 1; i <= 30; i++) {
+let prev = balance;
+balance = balance * (1 + percent);
+let profit = balance - prev;
+
+let div = document.createElement("div");
+div.className = "day";
+
+function render() {
+if (completedDays.includes(i)) {
+div.classList.add("completed");
+div.innerHTML = `<div>Կատարված ✅</div>`;
+} else {
+div.classList.remove("completed");
+div.innerHTML = `
+<div>Օր ${i}</div>
+<div>$${balance.toFixed(2)}</div>
+<div>+$${profit.toFixed(2)}</div>
+`;
+}
+}
+
+render();
+
+div.onclick = function() {
+if (completedDays.includes(i)) {
+completedDays = completedDays.filter(d => d !== i);
+} else {
+completedDays.push(i);
+}
+
+localStorage.setItem("days", JSON.stringify(completedDays));
+render();
+updateProgress();
+};
+
+daysContainer.appendChild(div);
+}
+
+document.getElementById("result").innerHTML = "Նպատակ: $" + balance.toFixed(2);
+updateProgress();
+}
+
+function updateProgress() {
+document.getElementById("progress").innerHTML =
+"Выполнено: " + completedDays.length + " / 30";
+}
+
+function resetPlan() {
+localStorage.clear();
+location.reload();
+}
+
+window.onload = function() {
+let start = localStorage.getItem("start");
+let percent = localStorage.getItem("percent");
+
+if (start && percent) {
+document.getElementById("start").value = start;
+document.getElementById("percent").value = percent * 100;
+generate();
+}
+};
+</script>
+
+</body>
+</html>
